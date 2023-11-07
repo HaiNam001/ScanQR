@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Quét mã QR và chuyển hướng đến YouTube</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrious"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        #qrcode-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .qrcode {
+            width: 200px;
+            height: 200px;
+        }
+
+        .deleteButton {
+            position: absolute;
+            top: 0;
+            right: -20px;
+            background: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="qrcode-container">
+        <div id="qrcode"></div>
+        <button id="generateButton" onclick="generateQRCode()">Hiển thị mã QR</button>
+    </div>
+
+    <script>
+        var qrCodeImage = null;
+
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        function generateQRCode() {
+            var youtubeURL = "http://10.33.15.191:5500/QRCamera.html"; // URL của YouTube
+            var qr = new QRious({
+                element: document.getElementById('qrcode'),
+                value: youtubeURL, // Gán giá trị của URL YouTube vào mã QR
+                size: 200 // Kích thước mã QR
+            });
+
+            qrCodeImage = qr.toDataURL('image/png');
+
+            var imgElement = document.createElement('img');
+            imgElement.src = qrCodeImage;
+            imgElement.className = 'qrcode';
+
+            var qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = ''; // Xóa bất kỳ hình ảnh nào đã hiển thị trước đó
+            qrcodeDiv.appendChild(imgElement);
+
+            document.getElementById('generateButton').style.display = 'none'; // Ẩn nút "Hiển thị mã QR"
+
+            var deleteButton = document.createElement('button');
+            deleteButton.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
+            deleteButton.className = 'deleteButton';
+            deleteButton.onclick = deleteQRCode;
+
+            var qrcodeContainer = document.getElementById('qrcode-container');
+            qrcodeContainer.appendChild(deleteButton);
+        }
+
+        function deleteQRCode() {
+            var qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = ''; // Xóa hình ảnh mã QR
+
+            qrCodeImage = null;
+
+            document.getElementById('generateButton').style.display = 'block'; // Hiển thị nút "Hiển thị mã QR"
+
+            var deleteButton = document.querySelector('.deleteButton');
+            deleteButton.remove();
+        }
+
+        // Xử lý khi quét mã QR bằng điện thoại
+        var scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
+        scanner.addListener('scan', function (content) {
+            // Khi quét thành công, chuyển hướng đến YouTube
+            if (isValidYouTubeURL(content)) {
+                window.location.href = content;
+            }
+        });
+
+        Instascan.Camera.getCameras().then(function (cameras) {
+            if (cameras.length > 0) {
+                scanner.start(cameras[0]);
+            } else {
+                console.error('No cameras found.');
+            }
+        }).catch(function (e) {
+            console.error(e);
+        });
+
+        function isValidYouTubeURL(url) {
+            // Kiểm tra xem URL có phải là URL của YouTube không
+            // Ví dụ đơn giản: Kiểm tra URL có chứa "youtube.com" hay không
+            return url.includes('youtube.com');
+        }
+    </script>
+    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+    <video id="preview" style="display: none;"></video>
+</body>
+
+</html>
